@@ -1,0 +1,13 @@
+# Evening Study Proctor
+
+This is a re-write of the underlying code for [Evening Web Quiz](https://github.com/digit112/web-quiz) which is a tool for rapid bulk memorization similar to the humble flash card but vastly expanded in capacity. The new TypeScript codebase will be an open-source NPM library for loading, saving, operating on, and utilizing a common object of this library's fascination which is called the *Library*. The library version 2.0 specification is included in the documentation folder of this project, and specifies the common format of transmission for a library object while giving insight into the object's structure and purpose.
+
+## The Library
+
+The Library is a hierarchical directory of questions. It is effectively an arrangement of *Folder* and *Question* objects.
+
+The purpose of this tool is to provide an API which allows easily interacting with libraries. It consists of two portions - one which manages only that state which is found in the common transmission format of the Library itself, which is called common state, and one which manages the live data which is updated as the questions are repeatedly answered by the end user, which is called the uncommon state.
+
+The library has two modes of operation. In the first mode, the library's structure is modified by the end user via an editing interface. In this mode, the common state is mutable and temporary while the uncommon state does not exist. In the second mode, the user is utilizing the library and actively answering questions. In this mode, the common state is immutable and has the lifetime of the application interface, whereas the uncommon state is mutable and potentially does not have a lifetime of the whole application.
+
+This package therefore has three core components - two for managing common state, an immutable `Library` interface and the `MutableLibrary` class which implements that interface but also provides mutability in the form of accessor functions as well as high-level utilities. The third component is the broader category of uncommon state managers which implement the `Askable` interface and incorporate a `Library` instance for their continuous reference. The three provided uncommon state managers are the `UniformLibrary`, `TestLibrary`, and `ExponentialLibrary`. These offer distinct user experiences and utilize vastly different models of state. They all derive from `InstancedLibrary`, which implements features that should be common to all uncommon state managers.

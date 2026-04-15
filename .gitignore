@@ -1,0 +1,14 @@
+# --- Build Outputs ---
+dist/
+
+# --- Dependencies ---
+node_modules/
+.pnpm-store/
+
+# --- TypeScript Cache ---
+# tsc and tsup generate these for faster incremental builds
+*.tsbuildinfo
+
+# --- Testing ---
+coverage/
+.nyc_output/
