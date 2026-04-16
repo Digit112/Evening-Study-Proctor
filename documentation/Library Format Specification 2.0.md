@@ -111,10 +111,12 @@ A folder has its own params as well as passthru params that only affect the beha
 - `tags` (*string[]*; default \[\]) - A list of tags for this folder. Displayed to the user and case-sensitive. 
 - `prerequisites` (*string[]*; default \[\]) - Prerequisites for this question. Must identify a Question, Folder, or QuestionSet.
 - `contents` (*(QuestionSet | Folder)\[\]*; required) - The contents of this folder.
-- `incorrect-answers` (*mdstring[]*; default \[\]) - A set of incorrect answers which may appear on all questions contained by this folder, when they are shown in multiple choice.
-- `incorrect-answers-pass-thru` (*bool*; default true) - If false, entries in the `incorrect-answers` field of folders which contain this folder cannot appear on multiple choice question within this folder.
+- `incorrect-answers` (*mdstring[]*; default \[\]) - A set of incorrect answers which may appear on all questions contained by this folder, when they are shown in multiple-choice, radio-buttons, or checkboxes mode.
+- `incorrect-answers-pass-thru` (*bool*; default true) - If false, entries in the `incorrect-answers` field of folders which contain this folder cannot appear on multiple-choice, radio-buttons, or checkboxes questions within this folder.
+- `correct-answers` (*mdstring[]*; default \[\]) - A set of correct answers which may appear on all questions contained by this folder, when they are shown in multiple-choice, radio-buttons, or checkboxes mode.
+- `correct-answers-pass-thru` (*bool*; default true) - If false, entries in the `correct-answers` field of folders which contain this folder cannot appear on multiple-choice, radio-buttons, or checkboxes questions within this folder.
 - `substitutions` (*string\{\}*; default \{\}) A map of literal find-and-replace strings to be applied to submissions and answers before being compared. Useful to remove typographic nuances such as the differences between British and American English, or to replace all hyphens with spaces so that users don't need to remember how to hyphenate a phrase to be marked correctly. If the question is also case-insensitive, the case canonization should be applied before the substitutions.
-- `is-sharing-group` (*bool*; default false) - A question's sharing group is the smallest Folder or QuestionSet (the furthest down the hierarchy) which contains that question and which has `is-sharing-group` set to true. If a question has `share-answers` set to true (the default) then its correct answer can appear as the incorrect answer in a `"multiple-choice"`, `"radio-box"`, or `"checkboxes"` question with the same sharing group whose `incorrect-answer-sources` list contains `"shared"`.
+- `is-sharing-group` (*bool*; default false) - A question's sharing group is the smallest Folder or QuestionSet (the furthest down the hierarchy) which contains that question and which has `is-sharing-group` set to true. If a question has `share-answers` set to true (the default) then its correct answer can appear as the incorrect answer in a `"multiple-choice"`, `"radio-buttons"`, or `"checkboxes"` question with the same sharing group whose `incorrect-answer-sources` list contains `"shared"`.
 - `fragment` (*string*; default "") An identifier for a fragment.
 
 #### Keys for Fragment Management
@@ -181,17 +183,23 @@ The keys are split into categories based on which modes-of-presentation they are
 
 #### `"multiple-choice"`, `"radio-buttons"`, and `"checkboxes"`
 
-- `max-choices` (*integer*; default 4) - The number of options the user will be able to choose from. Only one can be correct. Fewer choices can be available if there aren't enough unique incorrect answers available.
-- `correct-answer-source` (*integer*; default -1) - Which answer to show as the correct one in multiple choice presentations, as a 0-based index into the `answers` field. -1 causes a random answer to be chosen each time.
 - `incorrect-answers` (*mdstring[]*; default \[\]) - A list of options which will be shown to the user as incorrect options in multiple choice presentations. These can be chosen regardless of the value of `incorrect-answer-sources`
 - `incorrect-answer-sources` (*string[]*; default \["inherited", "shared"\]) - A list of places from which the incorrect answers to display as options can be retrieved.
-	- `"inherited"` allows incorrect answers to come from the `incorrect-answers` fields of all folders containing this questions.
+	- `"inherited"` allows incorrect answers to come from the `incorrect-answers` fields of all folders containing this questions. Overidden by `incorrect-answers-pass-thru` when it is false.
 	- `"shared"` allows incorrect answerss to come from the `answers` fields on other questions in the same sharing group. See `is-sharing-group` on the Folder object definition.
+- `correct-answer-sources` (*string[]*; default \["inherited"\]) - Where to obtain correct answers. Format mirrors that of `incorrect-answer-sources` although it can only contain a single value.
+	- `"inherited"` allows correct answers to come from the `correct-answers` fields of all folders containing this questions. Overidden by `correct-answers-pass-thru` when it is false.
 
-#### `"checkboxes"`
+#### Just `"multiple-choice"` and `"radio-buttons"`
+
+- `max-choices` (*integer*; default 4) - The number of options the user will be able to choose from. Only one can be correct. Fewer choices can be available if there aren't enough unique incorrect answers available.
+- `correct-answer-index` (*integer*; default -1) - When set to -1, all values in the `answers` field for this question can appear as the correct answer when this question is displayed. If set to another value, it acts as a 0-based index into the the `answers` field of this question, and that answer in particular will be the only one that can appear as the correct choice for this question *except for inherited correct answers*.
+
+#### Just `"checkboxes"`
 
 - `max-correct-choices` (*integer*; default 2) - The number of correct choices to generate.
 - `max-incorrect-choices` (*integer*; default 2) - The number of incorrect choices to generate.
+- `must-select-correct-quantity` (*boolean*; default true) - If true, the user will be shown the number of correct choices and will be required to select 
 
 #### `"true-or-false"`
 

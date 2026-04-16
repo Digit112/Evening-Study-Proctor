@@ -12,3 +12,7 @@ node_modules/
 # --- Testing ---
 coverage/
 .nyc_output/
+
+# --- Docs to Omit ---
+documentation/*.aux
+documentation/*.log

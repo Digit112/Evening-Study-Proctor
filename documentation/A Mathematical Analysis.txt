@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{A Mathematical Analysis of the Problem of Question Choice for Rote Memorization}
+\author{ekobadd}
+
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+The Library is the structure which encodes a hierarchical directory of questions, which have a large number of properties and data associated with them, and which are meant to be memorized by the user via repetition.
+
+The APIs which utilize this data structure to ask the end-user questions and allow them to be answered are called the uncommon state managers because they use separate internal state models, but none of this state is present in the common transmissible format of the Library structure itself. They implement the \texttt{Askable} interface and can therefore also be called "askables".
+
+The critical problem is what question to show the user next. The simple strategies are as such: The \texttt{TestLibrary} askable shuffles all questions and presents them to the user in that order. When the list is exhausted, the process begins again. The \texttt{UniformLibrary} simply selects a question at random, with all questions having equal weight. These strategies are simple and often effective, but fail on large sets and may be overwhelming for users with next to no familiarity with the material. The \texttt{AdaptiveLibrary} uses algorithms based on the math in this document to choose questions in such a way \textbf{that the perceived difficulty is held constant over time}.
+
+\section{Difficulty Approximation}
+
+A naive approach to approximating the user's difficulty with a question is to assign a value of 1 to their correct answers and 0 to incorrect answers. Then, we average their answers to get the fraction of the time that they answered correct. We can infer that this value approximately gives the percent chance that they will answer correctly the next time they are asked. The problem is that we are ignoring that they are learning over time and therefore the later answers sshould be given more weight. A more elegant and accurate soltuion is to use a moving average, where their latest answer is averaged using a constant weight with their previous average - henceforth the mastery level. The weight of the new answer ranges from 0 to 1 and is called the adaptation rate and denoted $A_r$. Therefore, the new mastery level $M_n$ is calculated as such:
+
+\[ M_n = M_{n-1} \cdot (1-A_r) + A_{n-1} \cdot A_r \]
+
+where $A$ is the sequence of answers - a sequencee of values in the range $[0, 1]$ - and $M$ is of course the sequence of mastery values beginning with some initial mastery value $M_0$. This gives exponentially decreasing weight to successively older samples. For exmple if $A_r = 0.5$, then the most recent answer has a weight of $0.5$, whereas the previous has a weight of $0.25$ and the one before that $0.125$ and so on. The sequence $M$ therefore serves as an approximation of the percent chance that the next answer will be correct.
+
+By taking an average of all the active questions' mastery levels, weighted by their probability of being chosen, we obtain the probability that the next question will be answered correctly before we know what that question is. The complement of this value can be called the \textit{difficulty}. \textbf{A difficulty near 1 means that the user is getting many questions wrong. They are likely overwhelmed and frustrated. A difficulty near 0 means that they are getting eveerything correct. They are probably not learning much and are bored.}
+
+\subsection{Additional Considerations}
+
+\subsubsection{Correct Guesses}
+
+Multiple-choice and particularly true-false question can be correctly guessed a significant fraction of the time. Therefore, we adjust the adaptation rate downwards to compensate and therefore converge more slowly for these kinds of questions. The adaptation is multiplied by the complement of the probability of a correct guess. So, for a multiple-choice question with four choices the true $A_r$ is $1 - 0.25 = 0.75$ times, or three fourths of the base $A_r$. For true-false questions it is one half the base $A_r$.
+
+\subsubsection{Partial Credit}
+
+\subsubsection{Initial Mastery}
+
+\subsubsection{Repeat Questions}
+
+It is not preferable to ask someone a question twice in a row. As such, the base object (from which the uncommon state managers are derived) implements a prevention mechanism with two prongs. The first is that it avoids selecting the previously chosen question, and the second is that it forcefully windows a question if the windows only contains a single question, and that question was asked last. Only if there is a single selected question will it allow a questioon to appear twice in a row.
+
+\end{document}
