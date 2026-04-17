@@ -113,8 +113,6 @@ A folder has its own params as well as passthru params that only affect the beha
 - `contents` (*(QuestionSet | Folder)\[\]*; required) - The contents of this folder.
 - `incorrect-answers` (*mdstring[]*; default \[\]) - A set of incorrect answers which may appear on all questions contained by this folder, when they are shown in multiple-choice, radio-buttons, or checkboxes mode.
 - `incorrect-answers-pass-thru` (*bool*; default true) - If false, entries in the `incorrect-answers` field of folders which contain this folder cannot appear on multiple-choice, radio-buttons, or checkboxes questions within this folder.
-- `correct-answers` (*mdstring[]*; default \[\]) - A set of correct answers which may appear on all questions contained by this folder, when they are shown in multiple-choice, radio-buttons, or checkboxes mode.
-- `correct-answers-pass-thru` (*bool*; default true) - If false, entries in the `correct-answers` field of folders which contain this folder cannot appear on multiple-choice, radio-buttons, or checkboxes questions within this folder.
 - `substitutions` (*string\{\}*; default \{\}) A map of literal find-and-replace strings to be applied to submissions and answers before being compared. Useful to remove typographic nuances such as the differences between British and American English, or to replace all hyphens with spaces so that users don't need to remember how to hyphenate a phrase to be marked correctly. If the question is also case-insensitive, the case canonization should be applied before the substitutions.
 - `is-sharing-group` (*bool*; default false) - A question's sharing group is the smallest Folder or QuestionSet (the furthest down the hierarchy) which contains that question and which has `is-sharing-group` set to true. If a question has `share-answers` set to true (the default) then its correct answer can appear as the incorrect answer in a `"multiple-choice"`, `"radio-buttons"`, or `"checkboxes"` question with the same sharing group whose `incorrect-answer-sources` list contains `"shared"`.
 - `fragment` (*string*; default "") An identifier for a fragment.
@@ -187,8 +185,6 @@ The keys are split into categories based on which modes-of-presentation they are
 - `incorrect-answer-sources` (*string[]*; default \["inherited", "shared"\]) - A list of places from which the incorrect answers to display as options can be retrieved.
 	- `"inherited"` allows incorrect answers to come from the `incorrect-answers` fields of all folders containing this questions. Overidden by `incorrect-answers-pass-thru` when it is false.
 	- `"shared"` allows incorrect answerss to come from the `answers` fields on other questions in the same sharing group. See `is-sharing-group` on the Folder object definition.
-- `correct-answer-sources` (*string[]*; default \["inherited"\]) - Where to obtain correct answers. Format mirrors that of `incorrect-answer-sources` although it can only contain a single value.
-	- `"inherited"` allows correct answers to come from the `correct-answers` fields of all folders containing this questions. Overidden by `correct-answers-pass-thru` when it is false.
 
 #### Just `"multiple-choice"` and `"radio-buttons"`
 
@@ -199,7 +195,7 @@ The keys are split into categories based on which modes-of-presentation they are
 
 - `max-correct-choices` (*integer*; default 2) - The number of correct choices to generate.
 - `max-incorrect-choices` (*integer*; default 2) - The number of incorrect choices to generate.
-- `must-select-correct-quantity` (*boolean*; default true) - If true, the user will be shown the number of correct choices and will be required to select 
+- `must-select-correct-quantity` (*boolean*; default true) - If true, the user will be shown the number of correct choices and will be required to select that many before submitting.
 
 #### `"true-or-false"`
 
