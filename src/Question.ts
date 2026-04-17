@@ -30,7 +30,7 @@ export class Question {
 	readonly maxCorrectChoices: number;
 	readonly maxIncorrectChoices: number;
 	
-	constructor(questionObject: object) {
+	constructor(questionObject: any) {
 		this.question = questionObject.question;
 		this.answers = questionObject.answers;
 		

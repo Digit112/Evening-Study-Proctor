@@ -38,7 +38,7 @@ export class Folder {
 	readonly shareAnswers: boolean;
 	readonly firstTimeHint: boolean;
 	
-	constructor(folderObject: object) {
+	constructor(folderObject: any) {
 		this.label = folderObject.label;
 		this.description = folderObject.description;
 		this.id = folderObject.id;
