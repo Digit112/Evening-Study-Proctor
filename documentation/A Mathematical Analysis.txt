@@ -1,6 +1,8 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
+
 \usepackage{amsmath}
+\usepackage{graphicx}
 
 \title{A Mathematical Analysis of the Problem of Question Choice for Rote Memorization}
 \author{ekobadd}
@@ -19,26 +21,49 @@ The critical problem is what question to show the user next. The simple strategi
 
 \section{Difficulty Approximation}
 
-A naive approach to approximating the user's difficulty with a question is to assign a value of 1 to their correct answers and 0 to incorrect answers. Then, we average their answers to get the fraction of the time that they answered correct. We can infer that this value approximately gives the percent chance that they will answer correctly the next time they are asked. The problem is that we are ignoring that they are learning over time and therefore the later answers sshould be given more weight. A more elegant and accurate soltuion is to use a moving average, where their latest answer is averaged using a constant weight with their previous average - henceforth the mastery level. The weight of the new answer ranges from 0 to 1 and is called the adaptation rate and denoted $A_r$. Therefore, the new mastery level $M_n$ is calculated as such:
+A naive approach to approximating the user's difficulty with a question is to assign a value of 1 to their correct answers and 0 to incorrect answers. Then, we average their answers to get the fraction of the time that they answered correct. We can infer that this value approximately gives the percent chance that they will answer correctly the next time they are asked. The problem is that we are ignoring that they are learning over time and therefore the later answers should be given more weight. A more elegant and accurate solution is to use a moving average, where their latest answer is averaged using a constant weight with their previous average - henceforth the mastery level. The weight of the new answer ranges from 0 to 1 and is called the adaptation rate and denoted $A_r$. Therefore, the new mastery level $M_n$ is calculated as such:
 
 \[ M_n = M_{n-1} \cdot (1-A_r) + A_{n-1} \cdot A_r \]
 
-where $A$ is the sequence of answers - a sequencee of values in the range $[0, 1]$ - and $M$ is of course the sequence of mastery values beginning with some initial mastery value $M_0$. This gives exponentially decreasing weight to successively older samples. For exmple if $A_r = 0.5$, then the most recent answer has a weight of $0.5$, whereas the previous has a weight of $0.25$ and the one before that $0.125$ and so on. The sequence $M$ therefore serves as an approximation of the percent chance that the next answer will be correct.
+where $A$ is the sequence of answers - a sequence of values in the range $[0, 1]$ - and $M$ is of course the sequence of mastery values beginning with some initial mastery value $M_0$. This gives exponentially decreasing weight to successively older samples. For example if $A_r = 0.5$, then the most recent answer has a weight of $0.5$, whereas the previous has a weight of $0.25$ and the one before that $0.125$ and so on. The sequence $M$ therefore serves as an approximation of the percent chance that the next answer will be correct.
 
-By taking an average of all the active questions' mastery levels, weighted by their probability of being chosen, we obtain the probability that the next question will be answered correctly before we know what that question is. The complement of this value can be called the \textit{difficulty}. \textbf{A difficulty near 1 means that the user is getting many questions wrong. They are likely overwhelmed and frustrated. A difficulty near 0 means that they are getting eveerything correct. They are probably not learning much and are bored.}
+By taking an average of all the active questions' mastery levels, weighted by their probability of being chosen, we obtain the probability that the next question will be answered correctly before we know what that question is. The complement of this value can be called the \textit{difficulty}. \textbf{A difficulty near 1 means that the user is getting many questions wrong. They are likely overwhelmed and frustrated. A difficulty near 0 means that they are getting everything correct. They are probably bored and may not be learning anything at all}.
 
-\subsection{Additional Considerations}
+\begin{figure}[!hb]
+  \includegraphics[width=\linewidth]{images/50 Samples Mastery Level.png}
+  \caption{A sequence of 50 mastery levels generated from an answer sequence whose samples are each 1 or 0 with equal probability. Note how consecutive correct or incorrect answers yield diminishing returns.}
+\end{figure}
 
-\subsubsection{Correct Guesses}
+\subsection{Initial Mastery}
+
+There is a strong question as to what should be the initial mastery. The truth is that this system fails to incorporate any kind of error-approximation. In order to effectively introduce users to the system, instead of assuming their mastery level, the weight of the question is "pulled-high" as discussed in the next section, so that the initial mastery is irrelevant.
+
+\subsection{Correct Guesses}
 
 Multiple-choice and particularly true-false question can be correctly guessed a significant fraction of the time. Therefore, we adjust the adaptation rate downwards to compensate and therefore converge more slowly for these kinds of questions. The adaptation is multiplied by the complement of the probability of a correct guess. So, for a multiple-choice question with four choices the true $A_r$ is $1 - 0.25 = 0.75$ times, or three fourths of the base $A_r$. For true-false questions it is one half the base $A_r$.
 
-\subsubsection{Partial Credit}
+\subsection{Partial Credit}
 
-\subsubsection{Initial Mastery}
+\section{Question Weight}
 
-\subsubsection{Repeat Questions}
+A certain degree of randomness or "jitter" is necessary in the system. By weighting the questions differently, we nudge the distribution of the asked questions so as to encourage learning while discouraging both frustration and boredom. We would like to ensure that long-mastered questions are still asked every so often while ensuring the bulk of the questions are new to the user.
 
-It is not preferable to ask someone a question twice in a row. As such, the base object (from which the uncommon state managers are derived) implements a prevention mechanism with two prongs. The first is that it avoids selecting the previously chosen question, and the second is that it forcefully windows a question if the windows only contains a single question, and that question was asked last. Only if there is a single selected question will it allow a questioon to appear twice in a row.
+I imagine the weights of the questions - when sorted - form a geometric series, just like the weights of the answers towards the mastery value. However, this can't be an enforced property of the weights because it is unduly computationally complex (we should not need to sort anything) and would also assign different weights to questions with equal mastery level. Such unfavorable properties are a sure sign that we're straying from the correct path.
+
+In order for the geometric relationship between weights to be feasible, the range of valid weights must extend infinitely.
+
+We can imagine the range of mastery levels divided into strata. The boundaries separating these regions correspond to the mastery levels which can be obtained by answer sequences consisting either of an arbitrary number of correct answers or an arbitrary number of incorrect answers. They are sparse in the middle and approach infinite density at either edge.
+
+\begin{figure}[!hb]
+\centering
+  \includegraphics[scale=0.3]{images/Stratafied Mastery Levels.png}
+  \caption{Two sequences of mastery levels - a green one formed by an answer sequence of all 1s, and a red one formed by an answer sequence of all 0s. Note the strata delineated by the black lines which pass through all the values in either sequence of mastery values.}
+\end{figure}
+
+We can define the weight by taking some constant to be the ratio of weight between questions in adjacent strata. Thus, moving up one strata divides the weight by this ratio (which should be greater than 1) and moving down one strata multiplies by this ratio.
+
+\subsection{Repeat Questions}
+
+It is not preferable to ask someone a question twice in a row. As such, the base object (from which the uncommon state managers are derived) implements a prevention mechanism with two prongs. The first is that it avoids selecting the previously chosen question, and the second is that it forcefully windows a question if the window only contains a single question, and that question was asked last. Only if there is a single selected question will it allow a question to appear twice in a row.
 
 \end{document}
