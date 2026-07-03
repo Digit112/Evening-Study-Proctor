@@ -3,6 +3,7 @@
 
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{nath}
 
 \title{A Mathematical Analysis of the Problem of Question Choice for Rote Memorization}
 \author{ekobadd}
@@ -21,7 +22,7 @@ The critical problem is what question to show the user next. The simple strategi
 
 \section{Difficulty Approximation}
 
-A naive approach to approximating the user's difficulty with a question is to assign a value of 1 to their correct answers and 0 to incorrect answers. Then, we average their answers to get the fraction of the time that they answered correct. We can infer that this value approximately gives the percent chance that they will answer correctly the next time they are asked. The problem is that we are ignoring that they are learning over time and therefore the later answers should be given more weight. A more elegant and accurate solution is to use a moving average, where their latest answer is averaged using a constant weight with their previous average - henceforth the mastery level. The weight of the new answer ranges from 0 to 1 and is called the adaptation rate and denoted $A_r$. Therefore, the new mastery level $M_n$ is calculated as such:
+A naive approach to approximating the user's difficulty with a question is to assign a value of 1 to their correct answers and 0 to incorrect answers. Then, we average their answers to get the fraction of the time that they answered correct. This value approximately gives the percent chance that they will answer correctly the next time they are asked. The problem is that we are ignoring that they are learning over time and therefore the later answers should be given more weight. A more elegant and accurate solution is to use a moving average, where their latest answer is averaged using a constant weight with their previous average - henceforth referred to as the mastery level. The weight of the new answer ranges from 0 to 1 and is called the adaptation rate and denoted $A_r$. Therefore, the new mastery level $M_n$ is calculated as such:
 
 \[ M_n = M_{n-1} \cdot (1-A_r) + A_{n-1} \cdot A_r \]
 
@@ -62,8 +63,50 @@ We can imagine the range of mastery levels divided into strata. The boundaries s
 
 We can define the weight by taking some constant to be the ratio of weight between questions in adjacent strata. Thus, moving up one strata divides the weight by this ratio (which should be greater than 1) and moving down one strata multiplies by this ratio.
 
+Positioning an exponential function such that it has a vertical asymptote $x=0$ and intersects $(1, 0)$ should be enough to create a function with this property.
+
 \subsection{Repeat Questions}
 
 It is not preferable to ask someone a question twice in a row. As such, the base object (from which the uncommon state managers are derived) implements a prevention mechanism with two prongs. The first is that it avoids selecting the previously chosen question, and the second is that it forcefully windows a question if the window only contains a single question, and that question was asked last. Only if there is a single selected question will it allow a question to appear twice in a row.
+
+\section{Expressions}
+
+For the number of consecutive correct answers required to reach the specified mastery level $M_n$ from the given initial mastery level $M_0$:
+
+\[ C_p(M_0, M_n) = log_{1-A_r}(1-M_n) - log_{1-A_r}(1-M_0) \]
+
+For the number of consecutive incorrect answers required to reach the specified mastery level $M_n$ from the given initial mastery level $M_0$:
+
+\[ C_n(M_0, M_n) = log_{1-A_r}(M_n) - log_{1-A_r}(M_0) \]
+
+When the order of $M_0$ and $M_n$ are the wrong way around for either of the above functions, a negative number is produced whose absolute value gives the number of answers from $M_n$ to $M_0$. For example, with $A_r = 0.2$, $C_p(0.6, 0.5) = -1$ because it takes one correct answer to go from 0.5 to 0.6.
+
+\[ C_p(a, b) \ne C_n(b, a) \]
+\[ C_p(a, b) = -C_p(b, a) \]
+\[ C_n(a, b) = -C_n(b, a) \]
+
+\rule{\textwidth}{0.4pt}
+
+These can be combined to produce a new function for getting the number of consecutive answers to arrive at $M_n$ from $M_0$, which produces a positive number if the consecutive answers must be correct and a negative number if they must be incorrect.
+
+\[
+C(M_0, M_n) = \{
+  \begin{array}{ll}
+    C_p(M_0, M_n)  & \text{if } M_0 \lt M_n \lt 1 \\
+    -C_n(M_0, M_n) & \text{if } M_0 \gt M_n \gt 0 \\
+    0              & \text{if } M_0 = M_n
+  \end{array}
+\}
+\]
+
+Where $0 \leq M_0 \leq 1$. Note this function is not twice differentiable at $x=0$ unless $M_0 = 0.5$
+
+\rule{\textwidth}{0.4pt}
+
+For the adaptive weight of a question given the initial mastery $M_0$ and the current mastery level $M_n$. $R$ gives the ratio of weight between mastery levels separated by a single strata.
+
+\[ W(M_0, M_n) = R^{C(M_0, M_n)} \]
+
+This function grows (and shrinks) with exceptional speed. There is a question as to the impact of floating-point imprecision on the practical limits of this system, and whether a log-space implementation is feasible.
 
 \end{document}

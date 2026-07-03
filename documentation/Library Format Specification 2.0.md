@@ -200,3 +200,5 @@ The keys are split into categories based on which modes-of-presentation they are
 #### `"true-or-false"`
 
 The `answers` field must contain exactly one entry - either "true" or "false".
+
+- `explanation` (*mdstring*; default "") - An explanation to be shown to the user when they get the question wrong.
