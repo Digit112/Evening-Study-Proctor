@@ -15,7 +15,7 @@ The special primitive *mdstring* supports `**` for bold, `*` for italics, <code>
 
 Arrays of types are specified as *string[]*, *integer[]*, etc. If a field may have multiple types, they will be listed with a `|` between them as in *string | integer*.
 
-Maps from strings onto another type are effectively objects whose keys are not know ahead of time, and are specified as *string{}* where *string* is the type of the values. A map of strings onto integers would be *integer{}* (the keys are always strings!)
+Maps from strings onto another type are objects permitting arbitrary keys, and are specified as *string\{\}* where *string* is the type of the values. A map of strings onto integers would be *integer\{\}* (the keys are always strings!)
 
 ### Identifiers
 
@@ -25,11 +25,13 @@ All Folders and QuestionSets have an `id` key which must be unique throughout th
 
 Folders and Questions may be tagged. Tags may be shown to the user and allow additionally flexibility for selecting questions. These tags do not have a specified format and do not need to be meaningful to the receiving system.
 
-The library itself may also be tagged, and these generally should be meaaningful to the receiving system.
+The library itself may also be tagged, and these generally should be meaningful to the receiving system.
 
 ### Prerequisites
 
-Prerequisites allow the author to enforce order to the otherwise shuffled questions of a library. A prerequisite can be added to any Folder, Set, or Question, and may refer to any Folder, Set, or Question. This has two effects.
+Prerequisites allow the author to enforce order to the otherwise shuffled questions of a library. A prerequisite can be added to any Folder, Set, or Question, and may refer to any Folder, Set, or Question.
+
+The intended effects are twofold:
 
 - When a question would otherwise be *windowed*, if at least one of its prerequisites is not windowed, pick one at random to window instead.
 - When a question would otherwise be *asked*, if at least one of its prerequisites has never been asked, pick one at random to ask instead.
@@ -83,7 +85,7 @@ Within a gathered folder's contents, the `gathered` and `hidden` keys are always
 - `title` (*string*; required) - The display name of the library.
 - `description` (*mdstring[]*; default \[\]) - A list of text blurbs. Each is its own paragraph, displayed to the user.
 - `tags` (*string[]*; default \[\]) - A list of tags. Displayed to the user.
-- `author` (*string*; required) - The UUID of the author. If it is not a valid UUID or the specified UUID is not a known account, displayed as-is to the user.
+- `author` (*string*; required) - The identifier of the author. May or may not be meaningful to the receiving system.
 - `version` (*integer*; required) - Must be 2.
 - `id` (*string*; default "") - An id for this library. Format defined by the receiving system.
 - `root` (*Folder* | *QuestionSet*; required) - The root of the hierarchy. If it is a question set, the whole library is colloquially called a "Set", "Quiz", or "Deck" depending on its internals.
@@ -92,7 +94,7 @@ Within a gathered folder's contents, the `gathered` and `hidden` keys are always
 
 These are generally used to augment the tag options available to the end user. Typically, they are pointless except for augmenting tags which are brought in on fragments. Do not confuse the tags affected by the below fields with the `tags` field on the library itself, which is just meant to enable searching libraries by tagging.
 
-- `rename-tags` (*string{}*; default {}) - A map from internal tag names for Questions, Folders, and QuestionSets to new display names. The display names must be unique but are strictly for display and must not be referenced internally in any other fields. This is useful specifically to customize how tags are displayed that come from fragments.
+- `rename-tags` (*string\{\}*; default \{\}) - A map from internal tag names for Questions, Folders, and QuestionSets to new display names. The display names must be unique but are strictly for display and must not be referenced internally in any other fields. This is useful specifically to customize how tags are displayed that come from fragments.
 - `hide-tags` (*string*; default \[\]) - The listed tags will not be shown or selectable for the user.
 
 ### Folder
@@ -107,7 +109,7 @@ A folder has its own params as well as passthru params that only affect the beha
 - `description` (*mdstring[]*; default \[\]) - A description for this folder. Each element is a separate paragraph.
 - `id` (*string*; required) - A string of unspecified format which is unique among all ids in this library or fragment.
 - `hidden` (*bool*; default false) - If true, this folder will not be shown to the user. Allows you to make folders that serve strictly structural purposes. If a folder is hidden, all of its children will be hidden too.
-- `gathered` (*bool*; default false) - If true, the user's progress will be tracked at the level of this folder and not at the level of the individual questions it contains. Useful for if many questions really are about the same topic, so the user doesn't need to master every single one. The folder will still have weight proportional to the number of questions it contains. To counterract this, use the `importance` field.
+- `gathered` (*bool*; default false) - If true, the user's progress will be tracked at the level of this folder and not at the level of the individual questions it contains. Useful for if many questions really are about the same topic, so the user doesn't need to master every single one. The folder's weight will be comparable to that of a single question.
 - `tags` (*string[]*; default \[\]) - A list of tags for this folder. Displayed to the user and case-sensitive. 
 - `prerequisites` (*string[]*; default \[\]) - Prerequisites for this question. Must identify a Question, Folder, or QuestionSet.
 - `contents` (*(QuestionSet | Folder)\[\]*; required) - The contents of this folder.
@@ -170,10 +172,10 @@ The keys are split into categories based on which modes-of-presentation they are
 #### `"verbatim"`
 
 - `case-sensitive` (*bool*; default false) - Whether the submission is case-sensitive. An incorrectly-cased letter counts as one typo for typo forgiveness.
-- `substitutions` (*string{}*; default {}) - Find-and-replace keys onto values during submission canonization. Applied in addition to the substitutions on containing Folders.
+- `substitutions` (*string\{\}*; default \{\}) - Find-and-replace keys onto values during submission canonization. Applied in addition to the substitutions on containing Folders.
 - `hidden-answers` (*string[]*; default []) - Answers which will be marked correct if provided but which should not be shown to the user, usually because they are alternative orthographies that would just crowd the `answers` field. Undergo typo forgiveness.
 - `typo-blacklist` (*string[]*; default []) - List of submissions which should be marked as incorrect even if typo forgiveness would normally allow them.
-- `typo-forgiveness-level` (*string*; How strict the typo forgiveness is.
+- `typo-forgiveness-level` (*string*; default "low") - How strict the typo forgiveness is.
 	- `"none"` disables typo forgiveness. The user must type the answer exactly correctly.
 	- `"low"` gives the user one typo per 15 characters in the correct answer, rounded.
 	- `"medium"` gives the user one typo per 10 characters in the correct answer, rounded.

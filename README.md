@@ -1,6 +1,6 @@
 # Evening Study Proctor
 
-This is a re-write of the underlying code for [Evening Web Quiz](https://github.com/digit112/web-quiz) which is a tool for rapid bulk memorization similar to the humble flash card but vastly expanded in capacity. The new TypeScript codebase will be an open-source NPM library for loading, saving, operating on, and utilizing a common object of this library's fascination which is called the *Library*. The library version 2.0 specification is included in the documentation folder of this project, and specifies the common format of transmission for a library object while giving insight into the object's structure and purpose.
+This is a re-write of the underlying code for [Evening Web Quiz](https://github.com/digit112/web-quiz) which is a tool for rapid bulk memorization similar to the humble flash card but vastly expanded in capacity. The new TypeScript codebase will be an open-source NPM library for loading, saving, operating on, and utilizing the locus of this softwares's fascination, an object called the *Library*. The library version 2.0 specification is included in the documentation folder of this project, and specifies the common format of transmission for a library object while giving insight into the object's structure and purpose.
 
 ## The Library
 

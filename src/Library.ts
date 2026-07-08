@@ -21,7 +21,7 @@ export class Library {
 		this.version = libraryObject.version;
 		this.id = libraryObject.id;
 		
-		this.root = libraryObject.root;
+		this.root = new Folder(libraryObject.root);
 		
 		this.hideTags = libraryObject.hideTags;
 		this.renameTags = libraryObject.renameTags;
