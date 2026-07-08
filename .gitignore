@@ -16,3 +16,4 @@ coverage/
 # --- Docs to Omit ---
 documentation/*.aux
 documentation/*.log
+q.log

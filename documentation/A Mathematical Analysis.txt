@@ -105,7 +105,7 @@ Where $0 \leq M_0 \leq 1$. Note this function is not twice differentiable at $x=
 
 For the adaptive weight of a question given the initial mastery $M_0$ and the current mastery level $M_n$. $R$ gives the ratio of weight between mastery levels separated by a single strata.
 
-\[ W(M_0, M_n) = R^{C(M_0, M_n)} \]
+\[ W(M_0, M_n) = R^{-C(M_0, M_n)} \]
 
 This function grows (and shrinks) with exceptional speed. There is a question as to the impact of floating-point imprecision on the practical limits of this system, and whether a log-space implementation is feasible.
 
