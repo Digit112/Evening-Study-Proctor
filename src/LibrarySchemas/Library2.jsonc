@@ -1,0 +1,339 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "http://eveningstudyproctor.com",
+	
+	"title": "Library 2",
+	"description": "Version 2 of the Library common transmissible format specification",
+	"type": "object",
+	
+	"properties": {
+		"title": {
+			"description": "The display name of the Library",
+			"type": "string"
+		},
+		"description": {
+			"description": "A list of text blurbs explaining the library. Each is its own paragraph, displayed to the user.",
+			"type": "string"
+		},
+		"tags": {
+			"description": "A list of tags. Displayed to the user.",
+			"type": "array",
+			"items": {"type": "string"},
+			"uniqueItems": true
+		},
+		"author": {
+			"description": "The identifier of the author. May or may not be meaningful to the receiving system.",
+			"type": "string"
+		},
+		"version": {
+			"description": "Must be 2.",
+			"type": "integer"
+		},
+		"id": {
+			"description": "An id for this library. Format defined by the receiving system.",
+			"type": "string"
+		},
+		"root": {
+			"description": "The root of the Folder hierarchy.",
+			"allOf": [
+				"oneOf": [
+					{ "$ref": "#/$defs/Folder" },
+					{ "$ref": "#/$defs/QuestionSet" }
+				],
+				{
+					// Passthru params are required on the root.
+					"required": [
+						"case-sensitive",
+						"max-choices",
+						"max-correct-choices",
+						"max-incorrect-choices",
+						"modes-of-presentation",
+						"typo-forgiveness-level",
+						"correct-answer-index",
+						"importance",
+						"share-answers",
+						"first-time-hint"
+					]
+				}
+			]
+		}
+	},
+	"required": ["title", "author", "version", "root"],
+	"additionalProperties": false,
+	
+	"$defs": {
+		"Mode-Of-Presentation": {
+			"type": "string",
+			"enum": ["verbatim", "multiple-choice", "flash-card", "checkboxes", "true-or-false"]
+		},
+		"Typo-Forgiveness-Level": {
+			"type": "string",
+			"enum": ["none", "low", "medium", "high"]
+		},
+		"Incorrect-Answer-Source": {
+			"type": "string",
+			"enum": ["shared", "inherited"]
+		},
+		"Substitution": {
+			"type": "array",
+			"minItems": 2,
+			"maxItems": 2,
+			
+			"items": {
+				"type": "string"
+			}
+		},
+		"Folder": {
+			"allOf": [
+				{ "$ref": "#/$defs/Container" },
+				{ "properties": { "contents": { "type": "array", "items": { "$ref": "#/$defs/Folder" } } } }
+			],
+			"unevaluatedProperties": false
+		},
+		"QuestionSet": {
+			"allOf": [
+				{ "$ref": "#/$defs/Container" },
+				{ "properties": { "questions": { "type": "array", "items": { "$ref": "#/$defs/Question" } } } }
+			],
+			"unevaluatedProperties": false
+		},
+		"Container": {
+			"type": "object",
+			"properties": {
+				"label": {
+					"description": "The name of this container. Displayed to the user.",
+					"type": "string"
+				},
+				"id": {
+					"description": "A string which is unique among all ids in the containing library or fragment.",
+					"type": "string"
+				},
+				"description": {
+					"description": "A description for this container. Each element is a separate paragraph.",
+					"type": "string",
+					"default": ""
+				},
+				"hidden": {
+					"decription": "If true, this container will not be shown to the user.",
+					"type": "boolean",
+					"default": false
+				},
+				"gathered": {
+					"decription": "If true, the user's progress will be tracked at the level of this folder and not at the level of the individual questions it contains.",
+					"type": "boolean",
+					"default": false
+				},
+				"prerequisites": {
+					"description": "A list container or question IDs which are prerequisites to this container.",
+					"type": "array",
+					"default": [],
+					"items": { "type": "string" }
+				},
+				"incorrect-answers-pass-thru": {
+					"descriptiobn": "If false, questions within this container can recieve incorrect answers from containers that this container is within.",
+					"type": "boolean",
+					"default": true
+				},
+				"is_sharing_group": {
+					"descriptions": "If true, becomes a sharing group, allowing answers on some questions within this container to appear as wrong choices on other multiple-choice questions within this container.",
+					"type": "boolean",
+					"default": false
+				},
+				"fragment": {
+					"descriptions": "A container fragment identifier.",
+					"type": ["string", null],
+					"default": null
+				},
+				
+				// Passthru Params
+				"case-sensitive": {
+					"type": ["boolean", "null"],
+					"default": null
+				},
+				"max-choices": {
+					"type": ["integer", "null"],
+					"default": null,
+					"exclusiveMinimum": 0
+				},
+				"max-correct-choices": {
+					"type": ["integer", "null"],
+					"default": null,
+					"exclusiveMinimum": 0
+				},
+				"max-incorrect-choices": {
+					"type": ["integer", "null"],
+					"default": null,
+					"exclusiveMinimum": 0
+				},
+				"modes-of-presentation": {
+					"type": ["array", "null"],
+					"default": null,
+					"items": { "$ref": "#/$defs/Mode-Of-Presentation" }
+				},
+				"typo-forgiveness-level": {
+					"$ref": "#/$defs/Typo-Forgiveness-Level"
+				},
+				"correct-answer-index": {
+					"type": ["integer", "null"],
+					"default": null,
+					"exclusiveMinimum": -1
+				},
+				"incorrect-answer-sources": {
+					"type": ["array", "null"],
+					"default": null,
+					"items": {
+						"$ref": "#/$defs/Incorrect-Answer-Source"
+					}
+				},
+				"importance": {
+					"type": ["number", "null"],
+					"default": null,
+					"exclusiveMinimum": 0
+				},
+				"share-answers": {
+					"type": ["boolean", "null"],
+					"default": null
+				},
+				"first-time-hint": {
+					"type": ["boolean", "null"],
+					"default": null
+				},
+				
+				// Cumulative params
+				"incorrect-answers": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					}
+				},
+				"substitutions": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"$ref": "#/$defs/Substitution"
+					},
+				"tags": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					}
+				}
+			},
+			"required": ["label", "id"]
+		},
+		"Question": {
+			"type": "object",
+			"properties": {
+				"question": {
+					"description": "The question statement.",
+					"type": "string"
+				},
+				"answers": {
+					"description": "A list of valid answers which can be displayed to the user.",
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"tags": {
+					"description": "A list of tags for this question. Displayed to the user and case-sensitive."
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					}
+				},
+				"prerequisites": {
+					"description": "Prerequisites for this question. Must identify a Question, Folder, or QuestionSet.",
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					}
+				},
+				"disabled": {
+					"decription": "If true, this question can not be selected.",
+					"type": ["boolean", "null"],
+					"default": null
+				},
+				"share-answers": {
+					"description": "Whether to share answers with questions in the same sharing group.",
+					"type": ["boolean", "null"],
+					"default": null
+				},
+				"first-time-hint": {
+					"description": "Whether the user will be shown the answer to this question the first time they see it.",
+					"type": ["boolean", "null"],
+					"default": null
+				},
+				"importance": {
+					"description": "Causes questions to be substantially more or less difficult to get a good mastery level on.",
+					"type": "number",
+					"default": 1,
+					"exclusiveMinimum": 0
+				},
+				"modes-of-presentation": {
+					"description": "The ways in which this question can be presented.",
+					"type": ["array", "null"],
+					"default": null,
+					"minItems": 1,
+					"items": {
+						"type": { "$ref": "#/$defs/Mode-Of-Presentation" }
+					}
+				},
+				
+				// Verbatim questions
+				"case-sensitive": {
+					"description": "Whether answers to this question must be cased correctly.",
+					"type": ["boolean", null],
+					"default": null,
+				},
+				"substitutions": {
+					"description": "An array of two-tuples with find-and-replace strings to be applied during normalization.",
+					"type": "array",
+					"default": [],
+					"items": {
+						"$ref": "#/$defs/Substitution"
+					}
+				},
+				"hidden-answers": {
+					"description": "Answers which will be marked correct if provided but which should not be shown to the user.",
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					}
+				},
+				"typo-blacklist": {
+					"description": "Answers which will be marked incorrect even if typo forgiveness would otherwise allow them to be marked correct.",
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					}
+				},
+				"typo-forgiveness-level": {
+					"description": "How lenient the typo forgiveness is.",
+					"$ref": "#/$defs/Typo-Forgiveness-Level"
+				},
+				
+				// Multiple-Choices and Checkboxes
+				"incorrect-answers": {
+					"description": "A list of options which will be shown to the user as incorrect options in multiple choice presentations.",
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					}
+				},
+				"incorrect-answer-sources": {
+					
+				}
+			},
+			"required": ["question", "answers"],
+			"unevaluatedProperties": false
+		}
+	}
+}

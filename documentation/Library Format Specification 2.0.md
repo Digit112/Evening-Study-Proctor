@@ -76,6 +76,14 @@ When quizzed, the user will only be asked a single question from any gathered gr
 
 Within a gathered folder's contents, the `gathered` and `hidden` keys are always implicitly true and may not be overidden.
 
+### Key Categories
+
+In addition to the keys which control a folder's behavior, there are passthru params and cumulative params. Both are null by default. Neither affect the behavior of the folder itself. Passthru params are inherited. Any folder with an explicitly-specified passthru param overrides any value it might've inherited otherwise.
+
+Cumulative params are similar, but instead of being overriden, they are concatenated. Individual questions inherit a combination of all such values on every Folder and QuestionSet containing them.
+
+Of course, all cumulatives are arrays. Their defaults are empty arrays. Passthrus are of varying types, and are null by default on all Folders and QuestionSets, allowing inheritance. Their actual defaults are defined at the level of the Library.
+
 ## Enumeration of Objects
 
 ### Library
@@ -106,17 +114,14 @@ A folder has its own params as well as passthru params that only affect the beha
 #### Keys
 
 - `label` (*mdstring*; required) - The name of this folder. Displayed to the user.
-- `description` (*mdstring[]*; default \[\]) - A description for this folder. Each element is a separate paragraph.
 - `id` (*string*; required) - A string of unspecified format which is unique among all ids in this library or fragment.
+- `description` (*mdstring[]*; default \[\]) - A description for this folder. Each element is a separate paragraph.
 - `hidden` (*bool*; default false) - If true, this folder will not be shown to the user. Allows you to make folders that serve strictly structural purposes. If a folder is hidden, all of its children will be hidden too.
 - `gathered` (*bool*; default false) - If true, the user's progress will be tracked at the level of this folder and not at the level of the individual questions it contains. Useful for if many questions really are about the same topic, so the user doesn't need to master every single one. The folder's weight will be comparable to that of a single question.
-- `tags` (*string[]*; default \[\]) - A list of tags for this folder. Displayed to the user and case-sensitive. 
 - `prerequisites` (*string[]*; default \[\]) - Prerequisites for this question. Must identify a Question, Folder, or QuestionSet.
 - `contents` (*(QuestionSet | Folder)\[\]*; required) - The contents of this folder.
-- `incorrect-answers` (*mdstring[]*; default \[\]) - A set of incorrect answers which may appear on all questions contained by this folder, when they are shown in multiple-choice, radio-buttons, or checkboxes mode.
-- `incorrect-answers-pass-thru` (*bool*; default true) - If false, entries in the `incorrect-answers` field of folders which contain this folder cannot appear on multiple-choice, radio-buttons, or checkboxes questions within this folder.
-- `substitutions` (*string\{\}*; default \{\}) A map of literal find-and-replace strings to be applied to submissions and answers before being compared. Useful to remove typographic nuances such as the differences between British and American English, or to replace all hyphens with spaces so that users don't need to remember how to hyphenate a phrase to be marked correctly. If the question is also case-insensitive, the case canonization should be applied before the substitutions.
-- `is-sharing-group` (*bool*; default false) - A question's sharing group is the smallest Folder or QuestionSet (the furthest down the hierarchy) which contains that question and which has `is-sharing-group` set to true. If a question has `share-answers` set to true (the default) then its correct answer can appear as the incorrect answer in a `"multiple-choice"`, `"radio-buttons"`, or `"checkboxes"` question with the same sharing group whose `incorrect-answer-sources` list contains `"shared"`.
+- `incorrect-answers-pass-thru` (*bool*; default true) - If false, entries in the `incorrect-answers` field of folders which contain this folder cannot appear on `"multiple-choice"` or `"checkboxes"` questions within this folder.
+- `is-sharing-group` (*bool*; default false) - A question's sharing group is the smallest Folder or QuestionSet (the furthest down the hierarchy) which contains that question and which has `is-sharing-group` set to true. If a question has `share-answers` set to true (the default) then its correct answer can appear as the incorrect answer in a `"multiple-choice"` or `"checkboxes"` question with the same sharing group whose `incorrect-answer-sources` list contains `"shared"`.
 - `fragment` (*string*; default "") An identifier for a fragment.
 
 #### Keys for Fragment Management
@@ -134,16 +139,23 @@ Note that the receiving system is allowed to augment the tag names from within a
 These parameters do not affect the behavior of the folder at all, instead being inherited by - and affecting only - the questions within the folder. Their definitions are provided on the Question object definition. If two folders containing a certain question both specify a value for one of these fields, the question will inherit the value of the smaller, contained folder and ignore the value from the larger, containing folder.
 
 - `case-sensitive`
-- `modes-of-presentation`
 - `max-choices`
 - `max-correct-choices`
 - `max-incorrect-choices`
+- `modes-of-presentation`
 - `typo-forgiveness-level`
-- `correct-answer-source`
-- `incorrect-answer-sources`
+- `correct-answer-index`
 - `importance`
 - `share-answers`
 - `first-time-hint`
+
+#### Cumulative Keys
+
+These parameters also do not affect the folder itself. These are all arrays, which are concatenated instead of overidden when specified on multiple ancestors of a question.
+
+- `incorrect-answers`
+- `substitutions`
+- `tags`
 
 ### QuestionSet
 
@@ -160,38 +172,39 @@ The keys are split into categories based on which modes-of-presentation they are
 - `disabled` (*bool*; default false) - If true, this question can not be selected.
 - `share-answers` (*bool*; default true) - Whether to share answers with questions in the same sharing group. See `is-sharing-group` on the Folder object definition.
 - `first-time-hint` (*bool*; default true) - Whether the user will be shown the answer to this question the first time they see it. A user's submission has no effect on mastery level if the answer was provided.
-- `importance` (*float*; default 1) - Multiplier for the weight of this question. Allows the author to add many questions in a group without bogging down the user.
+- `importance` (*float*; default 1) - Causes questions to be substantially more or less difficult to get a good mastery level on. Incorrect responses count as this many incorrect answers. Correct answers count as one over this many correct answers.
 - `modes-of-presentation` (*string[]*; default \["verbatim"\]) - The ways in which this question can be presented. The leftmost option which is not blacklisted by the user is chosen.
 	- `"verbatim"` requires the user to type the answer.
 	- `"multiple-choice"` presents the user with buttons to select. They may also type to select or use arrow keys and enter to select an answer.
 	- `"flash-card"` presents the user with the question text and allows them to click to reveal the answer. They will not be graded.
-	- `"radio-buttons"` Presents the user with selectable radio boxes. Type-to-select is disabled but arrow keys work. Their is a separate submit button.
-	- `"checkboxes"` Is similar to `"radio-buttons"` but allows the user to select multiple answers.
+	- `"checkboxes"` Is similar to `"multiple-choice"` but allows the user to select multiple answers.
 	- `"true-or-false"` Allows the user to select true or false.
 
 #### `"verbatim"`
 
 - `case-sensitive` (*bool*; default false) - Whether the submission is case-sensitive. An incorrectly-cased letter counts as one typo for typo forgiveness.
-- `substitutions` (*string\{\}*; default \{\}) - Find-and-replace keys onto values during submission canonization. Applied in addition to the substitutions on containing Folders.
+- `substitutions` (*string[][]*; default []) - An array of two-tuples with find-and-replace strings to be applied to submissions and answers before being compared. Useful to remove typographic nuances such as the differences between British and American English, or to replace all hyphens with spaces so that users don't need to remember how to hyphenate a phrase to be marked correctly. If the question is also case-insensitive, the case canonization should be applied before the substitutions.
 - `hidden-answers` (*string[]*; default []) - Answers which will be marked correct if provided but which should not be shown to the user, usually because they are alternative orthographies that would just crowd the `answers` field. Undergo typo forgiveness.
 - `typo-blacklist` (*string[]*; default []) - List of submissions which should be marked as incorrect even if typo forgiveness would normally allow them.
-- `typo-forgiveness-level` (*string*; default "low") - How strict the typo forgiveness is.
+- `typo-forgiveness-level` (*string*; default "low") - How lenient the typo forgiveness is.
 	- `"none"` disables typo forgiveness. The user must type the answer exactly correctly.
 	- `"low"` gives the user one typo per 15 characters in the correct answer, rounded.
 	- `"medium"` gives the user one typo per 10 characters in the correct answer, rounded.
 	- `"high"` gives the user one typo per 5 characters in the correct answer, rounded.
 
-#### `"multiple-choice"`, `"radio-buttons"`, and `"checkboxes"`
+#### `"multiple-choice"` and `"checkboxes"`
 
 - `incorrect-answers` (*mdstring[]*; default \[\]) - A list of options which will be shown to the user as incorrect options in multiple choice presentations. These can be chosen regardless of the value of `incorrect-answer-sources`
-- `incorrect-answer-sources` (*string[]*; default \["inherited", "shared"\]) - A list of places from which the incorrect answers to display as options can be retrieved.
-	- `"inherited"` allows incorrect answers to come from the `incorrect-answers` fields of all folders containing this questions. Overidden by `incorrect-answers-pass-thru` when it is false.
-	- `"shared"` allows incorrect answerss to come from the `answers` fields on other questions in the same sharing group. See `is-sharing-group` on the Folder object definition.
+- `use-inherented-incorrect-answers` (*bool*; default true) - allows incorrect answers to come from the `incorrect-answers` fields of all folders containing this questions. Overidden by `incorrect-answers-pass-thru` when it is false.
+- `use-shared-incorrect-answers` (*bool*; default true) - allows incorrect answerss to come from the `answers` fields on other questions in the same sharing group. See `is-sharing-group` on the Folder object definition.
+- `display` (*string*; default "buttons") - The way this question is displayed.
+	- `"buttons"` displays the options as a row of buttons. Clicking one submits an answer.
+	- `"radio-box"` displays the options in a vertically arranged radio box and disables type-to-select. Better for longer-form questions.
 
-#### Just `"multiple-choice"` and `"radio-buttons"`
+#### Just `"multiple-choice"`
 
 - `max-choices` (*integer*; default 4) - The number of options the user will be able to choose from. Only one can be correct. Fewer choices can be available if there aren't enough unique incorrect answers available.
-- `correct-answer-index` (*integer*; default -1) - When set to -1, all values in the `answers` field for this question can appear as the correct answer when this question is displayed. If set to another value, it acts as a 0-based index into the the `answers` field of this question, and that answer in particular will be the only one that can appear as the correct choice for this question *except for inherited correct answers*.
+- `correct-answer-index` (*integer*; default -1) - When set to -1, all values in the `answers` field for this question can appear as the correct answer when this question is displayed. If set to another value, it acts as a 0-based index into the the `answers` field of this question, and that answer in particular will be the only one that can appear as the correct choice for this question.
 
 #### Just `"checkboxes"`
 
